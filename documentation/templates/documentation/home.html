@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Nestmed MVP</title>
+</head>
+<body>
+<h1>Transcript Submission</h1>
+<form method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Submit</button>
+</form>
+<h2>Submitted Transcripts</h2>
+<ul>
+    {% for transcript in transcripts %}
+        <li>{{ transcript.text }}</li>
+    {% endfor %}
+</ul>
+</body>
+</html>

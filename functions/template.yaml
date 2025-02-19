@@ -1,0 +1,113 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+
+Description: Process transcripts from SNS and store structured data in S3
+
+Resources:
+  ProcessedTranscriptsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "processed-transcripts-${AWS::AccountId}-${AWS::Region}"
+
+  TranscriptProcessingLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: LambdaSNSAndS3Access
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:PutObject
+                Resource: !Sub "arn:aws:s3:::${ProcessedTranscriptsBucket}/*"
+              - Effect: Allow
+                Action:
+                  - sns:Subscribe
+                  - sns:Receive
+                  - sns:Publish
+                Resource: !Ref TranscriptsTopicArn
+              - Effect: Allow
+                Action:
+                  - lambda:*
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*"
+
+  CreatedTranscriptPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !GetAtt TranscriptProcessingFunction.Arn
+      Principal: sns.amazonaws.com
+
+  TranscriptProcessingFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: TranscriptProcessor
+      Runtime: python3.11
+      Handler: app.lambda_handler
+      CodeUri: transcript_created/
+      MemorySize: 512
+      Timeout: 30
+      Role: !GetAtt TranscriptProcessingLambdaRole.Arn
+      Environment:
+        Variables:
+          PROCESSED_BUCKET: !Ref ProcessedTranscriptsBucket
+          OPEN_API_KEY: !Ref OpenAiKey
+      Events:
+        TranscriptsSNS:
+          Type: SNS
+          Properties:
+            Topic: !Ref TranscriptsTopicArn
+
+  TranscriptSNSSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      TopicArn: !Ref TranscriptsTopicArn
+      Protocol: lambda
+      Endpoint: !GetAtt TranscriptProcessingFunction.Arn
+
+  AudioFileProcessingLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: AudioFileProcessor
+      Runtime: python3.11
+      Handler: app.lambda_handler
+      CodeUri: audio_processing/
+      MemorySize: 512
+      Timeout: 30
+      Role: !GetAtt TranscriptProcessingLambdaRole.Arn
+      Environment:
+        Variables:
+          PROCESSED_BUCKET: !Ref ProcessedTranscriptsBucket
+          OPEN_API_KEY: !Ref OpenAiKey
+
+Parameters:
+  TranscriptsTopicArn:
+    Type: String
+    Description: ARN of the SNS topic for transcript processing
+  OpenAiKey:
+    Type: String
+
+Outputs:
+  TranscriptProcessingFunction:
+    Description: ARN of the Lambda function
+    Value: !GetAtt TranscriptProcessingFunction.Arn
+  ProcessedTranscriptsBucket:
+    Description: S3 bucket storing processed transcripts
+    Value: !Ref ProcessedTranscriptsBucket
+

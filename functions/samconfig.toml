@@ -1,0 +1,15 @@
+version = 0.1
+[dev]
+[dev.deploy]
+[dev.deploy.parameters]
+stack_name = "nestmed"
+s3_bucket = "aws-sam-583168578067"
+s3_prefix = "nestmed"
+region = "ca-central-1"
+profile = "personal"
+confirm_changeset = true
+parameter_overrides = """
+    TranscriptsTopicArn=\"arn:aws:sns:ca-central-1:583168578067:transcripts\"
+    OpenAiKey=\"sk-proj-hKW-eZb1vz3xHKS3O6CkPA4RRTuZ3ERrPEPWe-O2_5fvJoO62M4tk9_ Q7OmN7-NCJjSaXqH2hHT3BlbkFJAucx82Ke54WEa2Pp2SmVc_ReBsWFQ8CeRa-G 8_IOIM9dbIAaa-NAdzgQyu4Z85YahJ7PU-gdoA.\"
+"""
+capabilities = "CAPABILITY_IAM"
