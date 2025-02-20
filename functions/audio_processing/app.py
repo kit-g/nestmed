@@ -94,18 +94,3 @@ def lambda_handler(event, context):
             'body': json.dumps(f"Unexpected error: {str(e)}")
         }
 
-
-lambda_handler({'Records': [{'eventVersion': '2.1', 'eventSource': 'aws:s3', 'awsRegion': 'ca-central-1',
-                             'eventTime': '2025-02-19T18:55:39.248Z', 'eventName': 'ObjectCreated:Put',
-                             'userIdentity': {'principalId': 'AWS:AIDAYPR4OKIJ4ZEMMTLLC'},
-                             'requestParameters': {'sourceIPAddress': '173.35.0.74'},
-                             'responseElements': {'x-amz-request-id': '4H3QEE4CESEAVJAH',
-                                                  'x-amz-id-2': 'px4ecyksCZuu7QA6yB114guBP+KljSU+YNneds0arUtLSNCeHJxx7X1aRngrSpA7yD0YSAh3gm6B/XNdrEueVLAPoOLvDohi'},
-                             's3': {'s3SchemaVersion': '1.0', 'configurationId': 'new-audio',
-                                    'bucket': {'name': 'processed-transcripts-583168578067-ca-central-1',
-                                               'ownerIdentity': {'principalId': 'A2M4GH1TABYC0R'},
-                                               'arn': 'arn:aws:s3:::processed-transcripts-583168578067-ca-central-1'},
-                                    'object': {'key': 'audio/26.mp3', 'size': 126333,
-                                               'eTag': '8dc20233dcf1cc9649072e14db8920c6',
-                                               'sequencer': '0067B6292B219FAAD5'}}}]}
-               , 1)
